@@ -951,7 +951,7 @@ numtheory_factorial_primeswing(VALUE n)
         q >>= 1;
         shift += q;
     }
-    return rb_big_lshift(rec_factorial(t), LONG2NUM(shift));
+    return rb_big_lshift(TO_BIGNUM(rec_factorial(t)), LONG2NUM(shift));
 }
 
 struct Egcd {
