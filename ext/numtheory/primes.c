@@ -15,13 +15,12 @@ init_sieve(unsigned long max_n)
     unset_bit(numtheory_is_prime, 1);
     numtheory_primes = calloc((long)((double)max_n/(log((double)max_n)-4.0)+1), ULONG_SZ);
 
-    unsigned long long i;
     unsigned long j;
     unsigned long p = 0;
     numtheory_primes[p++] = 2;
     numtheory_primes[p++] = 3;
 
-    unsigned long long i1, i2, s;
+    unsigned LONG_LONG i1, i2, s;
     unsigned long max_n_sqrt = (unsigned long)(sqrt((double)max_n));
 
     for (i1 = 5, i2 = 7; ; i1 += 6, i2 += 6)

@@ -6,6 +6,11 @@
 #include "numtheory_macros.c"
 #include "constants.h"
 
+#ifdef DEBUG
+#include <stdio.h>
+#include <ruby/intern.h>
+#endif
+
 static VALUE mNumTheory;
 static ID primality_tests_ID;
 
@@ -122,7 +127,7 @@ Init_numtheory()
  *
  *    NumTheory.precompute_primes_upto(20000000)
  */
-static VALUE 
+VALUE 
 numtheory_precompute_primes_upto(VALUE obj, VALUE n)
 {
     if (FIXNUM_P(n))
@@ -166,7 +171,7 @@ numtheory_precompute_primes_upto(VALUE obj, VALUE n)
  *                       Matrix.identity(2))                
  *                              #=> Matrix[[10946, 6765], [6765, 4181]]
  */
-static VALUE
+VALUE
 numtheory_powermod(int argc, VALUE *argv)
 {
     VALUE base, pow, modulo, one;
@@ -175,7 +180,7 @@ numtheory_powermod(int argc, VALUE *argv)
     ID id_mul = rb_intern("*");
     ID id_mod = rb_intern("%");
 
-    VALUE result = NIL_P(one) ? rb_uint2big(1) : one;
+    VALUE result = NIL_P(one) ? INT2BIG(1) : one;
     FOR_BITS(pow, result = rb_funcall(result, id_mul, 1, result),
                   {},
                   result = rb_funcall(result, id_mul, 1, base),
@@ -198,7 +203,7 @@ static VALUE int_powermod_sliding_window_br(VALUE,VALUE,VALUE);
  *
  *    172.powermod(238, 239) #=> 1
  */
-static VALUE
+VALUE
 numtheory_int_powermod(VALUE b, VALUE p, VALUE m){
     if (!INTEGER_P(p))
     {
@@ -251,8 +256,8 @@ static int tail_zeros(VALUE n)
 {
     if (FIXNUM_P(n))
     {
-        int t = FIX2LONG(n);
-        int s = 0;
+        long t = FIX2LONG(n);
+        long s = 0;
         while (!(t & 1))
             t >>= 1, ++s;
         return s;
@@ -261,8 +266,9 @@ static int tail_zeros(VALUE n)
     {
         BDIGIT* digit = RBIGNUM_DIGITS(n);
         unsigned int L = RBIGNUM_LEN(n);
-        unsigned int i, j, s, z;
-        const unsigned long MAX = 1 << (SIZEOF_BDIGITS * 8 - 1);
+        unsigned int i, s, z;
+        unsigned LONG_LONG j;
+        const unsigned LONG_LONG MAX = 1ULL << (SIZEOF_BDIGITS * 8 - 1);
         for (i = s = 0, z = 1; i < L; ++i, ++digit)
         {
             for (j = 1; j <= MAX; j <<= 1)
@@ -289,7 +295,7 @@ static int tail_zeros(VALUE n)
  *  accordingly to Miller-Rabin test with <i>NumTheory::PrimalityTests</i>
  *  rounds. Otherwise returns <code>false</code>.
  */
-static VALUE 
+VALUE 
 numtheory_miller_rabin_pseudoprime_p(VALUE n)
 {
     long PRIMALITY_TESTS = FIX2LONG(rb_const_get(mNumTheory, primality_tests_ID));
@@ -362,12 +368,12 @@ numtheory_miller_rabin_pseudoprime_p(VALUE n)
 }
 
 inline static int
-prime_p(unsigned long t)
+prime_p(unsigned LONG_LONG t)
 {
     return (t & 1) ? t == 3 ? 1 : 
                        ((t % 6 == 1) || (t % 6 == 5)) ?
                            t < PRIMES_UPPER_LIMIT ? 
-                               is_set(numtheory_is_prime, t) ? 1 : 0 :
+                               is_set(numtheory_is_prime, (unsigned long)t) ? 1 : 0 :
                                numtheory_bpsw_pseudoprime_p(ULL2NUM(t)) :
                        0
                    : t == 2 ? 1 : 0;
@@ -382,16 +388,22 @@ prime_p(unsigned long t)
  *
  *    29.prime?      #=> true
  */
-static VALUE
+VALUE
 numtheory_prime_p(VALUE n) 
 {
     unsigned long t;
     if (FIXNUM_P(n) && (t = abs(FIX2LONG(n)), t < PRIMES_UPPER_LIMIT))
     {
+#ifdef DEBUG
+        fprintf(stderr, "[prime_p] looking up in the precomputed table...\n");
+#endif
         return prime_p(t) ? Qtrue : Qfalse;
     }
     else
     {
+#ifdef DEBUG
+        fprintf(stderr, "[prime_p] calling BPSW primality test...\n");
+#endif
         return numtheory_bpsw_pseudoprime_p(n);
     }
 }
@@ -404,7 +416,7 @@ numtheory_prime_p(VALUE n)
  *
  *    (10**28).nextprime #=> 10000000000000000000000000331
  */
-static VALUE
+VALUE
 numtheory_nextprime(VALUE n)
 {
     VALUE p = n;
@@ -437,7 +449,7 @@ nth_prime(long n)
  *    NumTheory.prime 1             #=> 2
  *    NumTheory.prime 1000          #=> 7919
  */
-static VALUE
+VALUE
 numtheory_prime(VALUE obj, VALUE i)
 {
     long t;
@@ -493,7 +505,7 @@ primepi(unsigned long t)
  *    NumTheory.primepi 10          #=> 4
  *    NumTheory.primepi -10         #=> 0
  */
-static VALUE
+VALUE
 numtheory_primepi(VALUE obj, VALUE n)
 {
     if (NEGATIVE_P(n))
@@ -520,7 +532,7 @@ numtheory_primepi(VALUE obj, VALUE n)
  *    NumTheory.fibonacci 10                    #=> 55
  *    NumTheory.fibonacci 10**30, 1234567890    #=> 862134135
  */
-static VALUE
+VALUE
 numtheory_fibonacci(int argc, VALUE* argv)
 {
     VALUE n, modulo;
@@ -540,13 +552,13 @@ numtheory_fibonacci(int argc, VALUE* argv)
         rb_raise(rb_eTypeError, "modulo must be integer");
     }
 
-    VALUE a, b, c, old_a, old_b, old_c, old_b_sq;
+    VALUE a, b, c, old_a, old_b_sq, old_c;
     a = c = one;
     b = zero;
 
     n = SUB(n, one);
 
-    FOR_BITS(n, { old_a = a; old_b = b; old_c = c;
+    FOR_BITS(n, { old_a = a; old_c = c;
                   old_b_sq = MUL(b, b);
                   
                   a = ADD(MUL(a, a), old_b_sq);
@@ -579,7 +591,7 @@ numtheory_fibonacci(int argc, VALUE* argv)
  *    NumTheory.sigma 1234567890, 0        #=> 48 
  *    NumTheory.sigma 1234567890, 1        #=> 3211610688
  */
-static VALUE
+VALUE
 numtheory_sigma(int argc, VALUE* argv)
 {
     VALUE n, pow;
@@ -632,7 +644,7 @@ numtheory_sigma(int argc, VALUE* argv)
  *
  *    NumTheory.eulerphi(1234567890)        #=> 329040288
  */
-static VALUE
+VALUE
 numtheory_eulerphi(VALUE obj, VALUE n)
 {
     if (!INTEGER_P(n))
@@ -665,7 +677,7 @@ numtheory_eulerphi(VALUE obj, VALUE n)
  *    (-987654321).prime_division 
  *          #=> [[-1, 1], [3, 2], [17, 2], [379721, 1]]
  */
-static VALUE
+VALUE
 numtheory_prime_division(VALUE n)
 {
     VALUE pd[2];
@@ -701,7 +713,7 @@ numtheory_prime_division(VALUE n)
  *    NumTheory.moebius(4)      #=> 0
  *    NumTheory.moebius(35)     #=> 1
  */
-static VALUE
+VALUE
 numtheory_moebius(VALUE obj, VALUE n)
 {
     if (!INTEGER_P(n))
@@ -796,7 +808,7 @@ primorial(unsigned long min, unsigned long max)
  *
  *    NumTheory.product([1,2,3,4,5,6])    #=> 720
  */
-static VALUE
+VALUE
 numtheory_product(VALUE obj, VALUE arr)
 {
     if (!RB_TYPE_P(arr, T_ARRAY))
@@ -815,7 +827,7 @@ numtheory_product(VALUE obj, VALUE arr)
  *
  *    2.primes_upto(17).to_a   #=> [2, 3, 5, 7, 11, 13, 17]
  */
-static VALUE
+VALUE
 numtheory_primes_upto(VALUE min, VALUE _max)
 {
     VALUE max = _max;
@@ -924,7 +936,7 @@ rec_factorial(long n)
  *
  *    50.factorial.to_s(31)  #=> "283sp352ltrc9csg1398f0dt7dg067g15ikr4b6spf70"
  */
-static VALUE
+VALUE
 numtheory_factorial_primeswing(VALUE n)
 {
     long t;
@@ -988,7 +1000,7 @@ extended_gcd(VALUE x, VALUE y)
  *    0.extended_gcd(0)           #=> [0, [0, 0]]
  *    239.extended_gcd(932)       #=> [1, [39, -10]]
  */
-static VALUE
+VALUE
 numtheory_extended_gcd(VALUE x, VALUE y)
 {
     if (!INTEGER_P(y))
@@ -1021,7 +1033,7 @@ numtheory_extended_gcd(VALUE x, VALUE y)
  *
  *    1234.inverse(12345)   #=> 9874
  */
-static VALUE
+VALUE
 numtheory_modular_inverse(VALUE x, VALUE y)
 {
     struct Egcd egcd = extended_gcd(x, y);
@@ -1046,7 +1058,7 @@ numtheory_modular_inverse(VALUE x, VALUE y)
  *
  *    20.znorder(11)  => 5
  */
-static VALUE
+VALUE
 numtheory_multiplicative_order(VALUE a, VALUE m)
 {
     if (rb_funcall(a, id_gcd, 1, m) != one)
@@ -1095,7 +1107,7 @@ static inline VALUE* triple_new(VALUE v1, VALUE v2, VALUE v3)
  *  Yields primitive pythagorean triples with perimeter less
  *  or equal to <i>max_perimeter</i>.
  */
-static VALUE 
+VALUE 
 numtheory_pythagorean_triples(VALUE obj, VALUE max_l)
 {
     RETURN_ENUMERATOR(obj, 1, &max_l);
@@ -1152,7 +1164,7 @@ numtheory_pythagorean_triples(VALUE obj, VALUE max_l)
  *  
  *  Returns the number of set bits.
  */
-static VALUE
+VALUE
 numtheory_popcount(VALUE n)
 {
     if (NEGATIVE_P(n))
@@ -1165,15 +1177,23 @@ numtheory_popcount(VALUE n)
 }
 
 int
-int_bitlength(unsigned int v)
+long_bitlength(unsigned long v)
 {   
-    // taken from http://graphics.stanford.edu/~seander/bithacks.html
-    const unsigned int b[] = {0x2, 0xC, 0xF0, 0xFF00, 0xFFFF0000};
-    const unsigned int S[] = {1, 2, 4, 8, 16};
-    int i;
+    /* taken from http://graphics.stanford.edu/~seander/bithacks.html */
 
-    register unsigned int r = 0;
+#if SIZEOF_LONG == 8
+    const unsigned long b[] = {0x2, 0xC, 0xF0, 0xFF00, 0xFFFF0000, 0xFFFFFFFF00000000ULL};
+    const unsigned long S[] = {1, 2, 4, 8, 16, 32};
+    int i;
+    register unsigned long r = 0;
+    for (i = 5; i >= 0; --i)
+#else
+    const unsigned long b[] = {0x2, 0xC, 0xF0, 0xFF00, 0xFFFF0000 };
+    const unsigned long S[] = {1, 2, 4, 8, 16};
+    int i;
+    register unsigned long r = 0;
     for (i = 4; i >= 0; --i)
+#endif
     {
       if (v & b[i])
       {
@@ -1191,32 +1211,32 @@ int_bitlength(unsigned int v)
  *  Returns the length in bits. Defined for positive integers only.
  *  0 is assumed to have length 1.
  */
-static VALUE
+VALUE
 numtheory_bitlength(VALUE n)
 {
     if (NEGATIVE_P(n))
     {
         rb_raise(rb_eArgError, "n must be positive");
     }
-    long bit_len, half_k;
+    long bit_len;
     if (FIXNUM_P(n))
     {
-        return INT2FIX(int_bitlength(FIX2LONG(n)));
+        return INT2FIX(long_bitlength(FIX2LONG(n)));
     }
     else
     {
         long len = RBIGNUM_LEN(n);
         bit_len = (len - 1) * SIZEOF_BDIGITS * 8;
-        return INT2FIX(bit_len + int_bitlength(RBIGNUM_DIGITS(n)[len - 1]));
+        return INT2FIX(bit_len + long_bitlength(RBIGNUM_DIGITS(n)[len - 1]));
     }
 }
 
 static int
-ull_jacobi(long long a, unsigned long long n)
+ull_jacobi(LONG_LONG a, unsigned LONG_LONG n)
 {
     /* it's assumed that n is odd and > 0 */
     int t = 1;
-    long long tmp;
+    LONG_LONG tmp;
     while (a) {
         if (a < 0) {
             a = -a; if ((n & 3) == 3) t = -t;
@@ -1230,7 +1250,7 @@ ull_jacobi(long long a, unsigned long long n)
         tmp = a; a = n; n = tmp; 
         if ((a & 3) == 3 && (n & 3) == 3) t = -t;
         a %= n; 
-        if (a > (long long)(n >> 1)) a -= n;
+        if (a > (LONG_LONG)(n >> 1)) a -= n;
     }
     return n == 1 ? t : 0;
 }
@@ -1241,7 +1261,7 @@ ull_jacobi(long long a, unsigned long long n)
  *  
  *  Returns jacobi symbol (a|n) where n must be odd positive
  */
-static VALUE
+VALUE
 numtheory_jacobi(VALUE a, VALUE n)
 {
     if (EVEN_P(n) || NEGATIVE_P(n))
@@ -1262,7 +1282,7 @@ numtheory_jacobi(VALUE a, VALUE n)
         {
             return INT2FIX(t * ull_jacobi(FIX2LONG(a), FIX2LONG(n)));
         }
-        if (RBIGNUM_LEN(n) <= 2) // unsigned long long is used 
+        if (RBIGNUM_LEN(n) <= 2) // unsigned LONG_LONG is used 
         {
             return INT2FIX(t * ull_jacobi(FIXNUM_P(a) ? FIX2LONG(a) : rb_big2ll(a), 
                                           rb_big2ull(n)));
@@ -1312,7 +1332,7 @@ numtheory_jacobi(VALUE a, VALUE n)
  *  If (a|p) = 1 returns the square root of a in Z/pZ
  *  from the interval [0, p/2]. Otherwise returns +nil+.
  */
-static VALUE
+VALUE
 numtheory_sqrtmod(VALUE a, VALUE p)
 {
     if (!INTEGER_P(p))
@@ -1401,7 +1421,7 @@ numtheory_sqrtmod(VALUE a, VALUE p)
  *
  *  Returns the square root integer part.
  */
-static VALUE
+VALUE
 numtheory_isqrt(VALUE n)
 {
     if (NEGATIVE_P(n))
@@ -1438,7 +1458,7 @@ static int MOD_255(VALUE n)
     {
         return FIX2LONG(n) % 255;
     }
-    unsigned long long m = 0;
+    unsigned LONG_LONG m = 0;
     BDIGIT* digit = RBIGNUM_DIGITS(n);
     int i;
     for (i = 0; i < RBIGNUM_LEN(n); ++i, ++digit)
@@ -1457,7 +1477,7 @@ static int MOD_255(VALUE n)
  *
  *  Checks whether the integer is a perfect square or not.
  */
-static VALUE
+VALUE
 numtheory_perfect_square_p(VALUE n)
 {
     if (NEGATIVE_P(n))
@@ -1530,19 +1550,32 @@ static VALUE power_of_2_mod(VALUE p, VALUE m){
    
 static VALUE miller_rabin_base2_pseudoprime_p(VALUE n)
 {
-    // for internal use only
+    /* for internal use only */
+#ifdef DEBUG
+    fprintf(stderr, "[miller-rabin base 2] start test for %s...\n", TO_CSTRING(n));
+#endif
     VALUE num = rb_big_clone(TO_BIGNUM(n));
     VALUE num_minus_one = SUB(num, one);
     VALUE d = rb_big_clone(TO_BIGNUM(num_minus_one));
 
     int s = tail_zeros(d);
+#ifdef DEBUG
+    fprintf(stderr, "[miller-rabin base 2] p-1 =  %s...\n", TO_CSTRING(d));
+    fprintf(stderr, "[miller-rabin base 2] tail zeros: %d\n", s);
+#endif
     d = RIGHT_SHIFT(d, s); 
 
     VALUE x = power_of_2_mod(d, num);
+#ifdef DEBUG
+    fprintf(stderr, "[miller-rabin base 2] 2**d = %s modulo %s\n", TO_CSTRING(x), TO_CSTRING(num));
+#endif
     if (EQL(x, one) || EQL(x, num_minus_one)) return Qtrue;
 
     while (s--) {
         x = MOD(MUL(x, x), num);
+#ifdef DEBUG
+    fprintf(stderr, "[miller-rabin base 2] x = %s modulo %s\n", TO_CSTRING(x), TO_CSTRING(num));
+#endif
         if (EQL(x, one)) return Qfalse;
         if (EQL(x, num_minus_one)) break;
     }
@@ -1558,7 +1591,7 @@ static VALUE miller_rabin_base2_pseudoprime_p(VALUE n)
  *
  *  Standard BPSW primality test.
  */
-static VALUE
+VALUE
 numtheory_bpsw_pseudoprime_p(VALUE n)
 {
     VALUE num = ABS(n);
@@ -1570,12 +1603,18 @@ numtheory_bpsw_pseudoprime_p(VALUE n)
     if (LESS(num, two) || EVEN_P(num) || 
                           (numtheory_perfect_square_p(num) == Qtrue))
     {
+#ifdef DEBUG
+        fprintf(stderr, "[bpsw_pseudoprime_p] the number is less than 2, even or a perfect square\n");
+#endif
         return Qfalse;
     }
 
     // Miller-Rabin test with base 2
     if (miller_rabin_base2_pseudoprime_p(num) == Qfalse)
     {
+#ifdef DEBUG
+        fprintf(stderr, "[bpsw_pseudoprime_p] Miller-Rabin test with base 2 returned false\n");
+#endif
         return Qfalse;
     }
 
@@ -1595,7 +1634,10 @@ numtheory_bpsw_pseudoprime_p(VALUE n)
             break;
         }
     }
-    
+   
+#ifdef DEBUG
+    fprintf(stderr, "[bpsw_pseudoprime_p] calling Lucas primality test...\n");
+#endif
     return lucas_pseudoprime_p(num, one, RIGHT_SHIFT(SUB(one, INT2FIX(d)), 2));
 }
 

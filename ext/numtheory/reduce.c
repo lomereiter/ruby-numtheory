@@ -31,7 +31,6 @@ inline static VALUE rshift_digits_inplace(VALUE n, int k)
 
     BDIGIT* ds = RBIGNUM_DIGITS(n);
     int len = RBIGNUM_LEN(n);
-    int i;
     if (len > k)
     {
         memmove(ds, ds + k, SIZEOF_BDIGITS * (len - k));
@@ -47,21 +46,19 @@ inline static VALUE rshift_digits_inplace(VALUE n, int k)
 
 inline static VALUE power_of_two(int p)
 {
-    return rb_big_lshift(rb_int2big(1), INT2FIX(p));
+    return rb_big_lshift(INT2BIG(1), INT2FIX(p));
 }
 
 static VALUE 
 bigmul_low_digits(VALUE x, VALUE y, int digits)
 {
     int xn = RBIGNUM_LEN(x);
-    if (FIXNUM_P(y)) y = rb_int2big(FIX2LONG(y));
+    if (FIXNUM_P(y)) y = INTVALUE2BIG(y);
     int yn = RBIGNUM_LEN(y);
 
-    int all = 0;
     if (digits > xn + yn) 
     {
         digits = xn + yn;
-        all = 1;
     }
     VALUE z = rb_big_new(digits, 1);
 
@@ -88,7 +85,7 @@ bigmul_low_digits(VALUE x, VALUE y, int digits)
 VALUE bigmul_low_digits_old(VALUE x, VALUE y, int digits)
 {
     int xn = RBIGNUM_LEN(x);
-    if (FIXNUM_P(y)) y = rb_int2big(FIX2LONG(y));
+    if (FIXNUM_P(y)) y = INTVALUE2BIG(y);
     int yn = RBIGNUM_LEN(y);
     VALUE z = rb_big_new(digits, 1);
     BDIGIT* xds = RBIGNUM_DIGITS(x);
@@ -120,7 +117,7 @@ static VALUE
 bigmul_high_digits(VALUE x, VALUE y, int dontcare, int x_right_shift)
 {
     int xn = RBIGNUM_LEN(x);
-    if (FIXNUM_P(y)) y = rb_int2big(FIX2LONG(y));
+    if (FIXNUM_P(y)) y = INTVALUE2BIG(y);
     int yn = RBIGNUM_LEN(y);
 
 
@@ -130,7 +127,7 @@ bigmul_high_digits(VALUE x, VALUE y, int dontcare, int x_right_shift)
     /* in order to avoid rb_big_clone call,
        let's virtually "shift" x instead of actual shifting */
     if (x_right_shift >= xn) { 
-        return rb_int2big(0);
+        return INT2BIG(0);
     } else {
         xds += x_right_shift;
         xn -= x_right_shift;
@@ -163,7 +160,7 @@ bigmul_high_digits(VALUE x, VALUE y, int dontcare, int x_right_shift)
 VALUE bigmul_high_digits_old(VALUE x, VALUE y, int dontcare)
 {
     int xn = RBIGNUM_LEN(x);
-    if (FIXNUM_P(y)) y = rb_int2big(FIX2LONG(y));
+    if (FIXNUM_P(y)) y = INTVALUE2BIG(y);
     int yn = RBIGNUM_LEN(y);
     VALUE z = rb_big_new(xn + yn, 1);
     BDIGIT* xds = RBIGNUM_DIGITS(x);

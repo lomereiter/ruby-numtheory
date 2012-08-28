@@ -1,6 +1,8 @@
 #ifndef NUMTHEORY_PRIMES_H
 #define NUMTHEORY_PRIMES_H
 
+#include <ruby.h>
+
 unsigned long init_sieve(unsigned long max_n); // returns prime_pi(max_n)
 
 #define ULONG_SZ sizeof(unsigned long)

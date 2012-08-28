@@ -19,16 +19,18 @@ RSpec::Core::RakeTask.new(:spec) do |spec|
   spec.pattern = FileList["spec/**/*_spec.rb"]
 end
 
-task :test => :spec
-task :default => :test
 
 require 'rubygems/package_task'
 Gem::PackageTask.new(spec) do |pkg|
 end
 
-task :build => :gem
 
 require 'rake/extensiontask'
 Rake::ExtensionTask.new('numtheory', spec) do |ext|
   ext.cross_compile = true
 end
+
+task :spec => :compile
+task :test => :spec
+task :default => :test
+task :build => :gem

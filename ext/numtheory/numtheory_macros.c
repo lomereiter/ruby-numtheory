@@ -1,7 +1,9 @@
+typedef int by_ISO_C_standard_translation_unit_should_not_be_empty;
+
 #define FOR_PRIME_FACTORS(n, p, d, action) do { \
     int __d; \
-    unsigned long __i; \
-    unsigned long long __t; \
+    BDIGIT __i; \
+    unsigned LONG_LONG __t; \
     VALUE __num = (FIXNUM_P(n) ? n : rb_big_clone(n)); \
     if (!FIXNUM_P(__num)) \
     { \
@@ -19,7 +21,7 @@
       __t = FIX2LONG(__num); \
     } \
  \
-    unsigned long long __p; \
+    unsigned LONG_LONG __p; \
     VALUE p, d; \
     if (prime_p(__t)) \
     { \
@@ -93,7 +95,7 @@
     else { \
         BDIGIT* _digits = RBIGNUM_DIGITS(n); \
         long _digits_length = RBIGNUM_LEN(n); \
-        BDIGIT _j; \
+        unsigned LONG_LONG _j; \
         BDIGIT* _digit = _digits + _digits_length - 1; \
         BDIGIT _half_fst_digit = (*_digit) >> 1; \
         for (_j = 1; _j <= _half_fst_digit; _j <<= 1); \
@@ -104,7 +106,7 @@
                 else if_zero_action; \
                 final_action; \
             } \
-            _j = 1 << (SIZEOF_BDIGITS * 8 - 1); \
+            _j = 1ULL << (SIZEOF_BDIGITS * 8 - 1); \
         } \
     } \
 } while(0)
@@ -121,7 +123,7 @@ FUNC_NAME(VALUE b, VALUE p, VALUE m) {\
     int pow = 0; \
     \
     /* adjusting window size */ \
-    if (FIXNUM_P(p)) p = rb_int2big(FIX2LONG(p)); \
+    if (FIXNUM_P(p)) p = INTVALUE2BIG(p); \
     len = RBIGNUM_LEN(p); \
     if      (len  <  8) k = 4; \
     else if (len  < 20) k = 5; \
