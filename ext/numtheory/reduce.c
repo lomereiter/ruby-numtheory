@@ -1,6 +1,8 @@
 #include <string.h>
 #include "numtheory.h"
 
+#if RUBY_VERSION_MINOR != 8
+
 #define MULADD(i, j) \
     __asm__ volatile(                   \
           "movl %6, %%eax \n\t"     \
@@ -229,3 +231,5 @@ VALUE rb_big_barrett_reduce(VALUE x, VALUE m, VALUE mu, int inplace)
         a = SUB(a, m);
     return rb_big_norm(a);
 }
+
+#endif

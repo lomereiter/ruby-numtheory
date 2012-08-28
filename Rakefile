@@ -11,19 +11,17 @@ rescue Bundler::BundlerError => e
 end
 require 'rake'
 
-spec = Gem::Specification.load('ruby-numtheory.gemspec')
-  
 require 'rspec/core'
 require 'rspec/core/rake_task'
 RSpec::Core::RakeTask.new(:spec) do |spec|
   spec.pattern = FileList["spec/**/*_spec.rb"]
 end
 
-
+spec = Gem::Specification.load('ruby-numtheory.gemspec')
+  
 require 'rubygems/package_task'
 Gem::PackageTask.new(spec) do |pkg|
 end
-
 
 require 'rake/extensiontask'
 Rake::ExtensionTask.new('numtheory', spec) do |ext|

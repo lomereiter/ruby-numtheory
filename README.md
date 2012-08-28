@@ -2,6 +2,8 @@
 
 The library is written as C extension and aims to provide fast implementations of common number-theoretical algorithms.
 
+[![Build Status](https://secure.travis-ci.org/lomereiter/ruby-numtheory.png)](http://travis-ci.org/lomereiter/ruby-numtheory)
+
 ## Currently implemented
 
 * powermod (uses sliding window exponentiation)

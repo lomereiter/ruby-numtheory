@@ -2,13 +2,14 @@
 
 #include "primes.h"
 #include "queue.h"
+#if RUBY_VERSION_MINOR != 8
 #include "reduce.h"
-#include "numtheory_macros.c"
+#endif
+#include "numtheory_macros.h"
 #include "constants.h"
 
 #ifdef DEBUG
 #include <stdio.h>
-#include <ruby/intern.h>
 #endif
 
 static VALUE mNumTheory;
@@ -50,6 +51,10 @@ Init_numtheory()
     id_lcm = rb_intern("lcm");
     id_pow = rb_intern("**");
     id_mul = rb_intern("*");
+#if RUBY_VERSION_MINOR == 8
+    id_cmp = rb_intern("<=>");
+    id_equal = rb_intern("==");
+#endif
 
     primality_tests_ID = rb_intern("PrimalityTests");
     /* PrimalityTests: the number of rounds in Miller-Rabin test for primality. */
@@ -192,7 +197,9 @@ numtheory_powermod(int argc, VALUE *argv)
 }
 
 static VALUE int_powermod_sliding_window(VALUE,VALUE,VALUE);
+#if RUBY_VERSION_MINOR != 8
 static VALUE int_powermod_sliding_window_br(VALUE,VALUE,VALUE);
+#endif
 
 /*
  *  call-seq:
@@ -238,8 +245,10 @@ numtheory_int_powermod(VALUE b, VALUE p, VALUE m){
     if (!FIXNUM_P(m) && RBIGNUM_LEN(m) >= BARRETT_REDUCE_THRESHOLD)
         use_barrett = 1;
 
+#if RUBY_VERSION_MINOR != 8
     if (use_barrett)
         return int_powermod_sliding_window_br(b, p, m);
+#endif
 
     if (use_sliding_window)
         return int_powermod_sliding_window(b, p, m);
@@ -335,7 +344,12 @@ numtheory_miller_rabin_pseudoprime_p(VALUE n)
     for (i = 0; i < PRIMALITY_TESTS; ++i)
     {
 
-        VALUE a = rb_funcall(rb_cRandom, 
+        VALUE a = rb_funcall(
+#if RUBY_VERSION_MINOR == 8
+                rb_mKernel,
+#else       
+                rb_cRandom, 
+#endif
                 id_rand,
                 1, 
                 num_minus_four);
@@ -811,7 +825,7 @@ primorial(unsigned long min, unsigned long max)
 VALUE
 numtheory_product(VALUE obj, VALUE arr)
 {
-    if (!RB_TYPE_P(arr, T_ARRAY))
+    if (TYPE(arr) != T_ARRAY)
     {
         rb_raise(rb_eTypeError, "the argument must be an array");
     }
@@ -1131,7 +1145,11 @@ numtheory_pythagorean_triples(VALUE obj, VALUE max_l)
         }
 
         a = triple[0]; b = triple[1]; c = triple[2];
+#if RUBY_VERSION_MINOR == 8
+        rb_yield_values(3, triple[0], triple[1], triple[2]);
+#else
         rb_yield_values2(3, triple);
+#endif
 
         // uses ternary pythagorean tree
         a2 = DOUBLED(a);
@@ -1645,6 +1663,8 @@ DEFINE_POWERMOD_SLIDING_WINDOW(int_powermod_sliding_window,
                                {}, 
                                MOD)
 
+#if RUBY_VERSION_MINOR != 8
 DEFINE_POWERMOD_SLIDING_WINDOW(int_powermod_sliding_window_br,
                                VALUE mu = rb_big_barrett_mu(m),
                                BARRETT_MOD)
+#endif

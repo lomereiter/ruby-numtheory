@@ -2,12 +2,20 @@
 #define NUMTHEORY_H 
 
 #include <ruby.h>
-#include <ruby/version.h>
-#include <stdio.h>
 #include <math.h>
 
+#ifndef HAVE_RUBY_VERSION_H
+#include <version.h>
+#else
+#include <ruby/version.h>
+#endif
+
+#if RUBY_VERSION_MINOR == 8
+#include <intern.h>
+#include <defines.h>
+#endif
+
 #ifdef DEBUG
-#include <ruby/intern.h>
 #include <stdio.h>
 inline static char* TO_CSTRING(VALUE x) {
     VALUE v = rb_String(x);
@@ -69,6 +77,29 @@ inline static VALUE INTVALUE2BIG(VALUE x) {
 inline static VALUE TO_BIGNUM(VALUE x) {
     return FIXNUM_P(x) ? INTVALUE2BIG(x) : x;
 }
+
+#if RUBY_VERSION_MINOR == 8
+static ID id_cmp, id_equal;
+
+inline static VALUE rb_big_cmp(VALUE x, VALUE y) {
+    return rb_funcall(x, id_cmp, 1, y);
+}
+
+inline static int rb_bigzero_p(VALUE x) {
+    return rb_funcall(x, id_equal, 1, zero) == Qtrue;
+}
+
+inline static VALUE rb_big_eq(VALUE x, VALUE y) {
+    return rb_funcall(x, id_equal, 1, y);
+}
+
+inline static VALUE rb_big_div(VALUE x, VALUE y) {
+    return rb_funcall(x, id_div, 1, y);
+}
+#undef RBIGNUM_DIGITS
+#define RBIGNUM_DIGITS(obj) ((BDIGIT*)(RBIGNUM(obj)->digits))
+
+#endif
 
 inline static unsigned long TO_ULONG(VALUE x) {
     if (!FIXNUM_P(x))

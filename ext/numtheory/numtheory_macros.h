@@ -1,4 +1,5 @@
-typedef int by_ISO_C_standard_translation_unit_should_not_be_empty;
+#ifndef NUMTHEORY_MACROS_H
+#define NUMTHEORY_MACROS_H 1
 
 #define FOR_PRIME_FACTORS(n, p, d, action) do { \
     int __d; \
@@ -13,7 +14,7 @@ typedef int by_ISO_C_standard_translation_unit_should_not_be_empty;
       } \
       else \
       { \
-        rb_raise(rb_eNotImpError, "Not implemented for numbers >= 2**64"); \
+        rb_raise(rb_eNotImpError, "Factorization is not implemented for numbers >= 2**64"); \
       } \
     } \
     else \
@@ -201,3 +202,5 @@ FUNC_NAME(VALUE b, VALUE p, VALUE m) {\
 }
 
 #define BARRETT_MOD(x, m) rb_big_barrett_reduce(x, m, mu, 1)
+
+#endif
