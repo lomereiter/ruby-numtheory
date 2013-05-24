@@ -23,8 +23,8 @@ inline static char* TO_CSTRING(VALUE x) {
 }
 #endif
 
-ID id_rand, id_mod, id_divmod, id_div,
-   id_gcd, id_lcm, id_pow, id_mul;
+extern ID id_rand, id_mod, id_divmod, id_div,
+          id_gcd, id_lcm, id_pow, id_mul;
 
 extern const VALUE zero,one,two,three,four,five,six,seven,eight;
 

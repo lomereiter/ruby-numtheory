@@ -15,6 +15,9 @@
 static VALUE mNumTheory;
 static ID primality_tests_ID;
 
+ID id_rand, id_mod, id_divmod, id_div,
+   id_gcd, id_lcm, id_pow, id_mul;
+
 static unsigned long PRIMES_UPPER_LIMIT = 3141592;
 static unsigned long NUM_OF_PRIMES;
 
