@@ -3,7 +3,7 @@ Gem::Specification.new do |gem|
   gem.homepage = "http://github.com/lomereiter/ruby-numtheory"
   gem.license = "MIT"
   gem.summary = "Ruby number theory library"
-  gem.version = "0.0.8.1"
+  gem.version = "0.0.9"
   gem.platform = Gem::Platform::RUBY
 
   gem.description = <<-EOF

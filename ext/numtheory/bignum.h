@@ -1,0 +1,96 @@
+#ifndef NUMTHEORY_BIGNUM_H
+#define NUMTHEORY_BIGNUM_H
+
+#ifndef BDIGIT
+# if SIZEOF_INT*2 <= SIZEOF_LONG_LONG
+# define BDIGIT unsigned int
+# define SIZEOF_BDIGIT SIZEOF_INT
+# define BDIGIT_DBL unsigned LONG_LONG
+# define BDIGIT_DBL_SIGNED LONG_LONG
+# define PRI_BDIGIT_PREFIX ""
+# define PRI_BDIGIT_DBL_PREFIX PRI_LL_PREFIX
+# elif SIZEOF_INT*2 <= SIZEOF_LONG
+# define BDIGIT unsigned int
+# define SIZEOF_BDIGIT SIZEOF_INT
+# define BDIGIT_DBL unsigned long
+# define BDIGIT_DBL_SIGNED long
+# define PRI_BDIGIT_PREFIX ""
+# define PRI_BDIGIT_DBL_PREFIX "l"
+# elif SIZEOF_SHORT*2 <= SIZEOF_LONG
+# define BDIGIT unsigned short
+# define SIZEOF_BDIGIT SIZEOF_SHORT
+# define BDIGIT_DBL unsigned long
+# define BDIGIT_DBL_SIGNED long
+# define PRI_BDIGIT_PREFIX "h"
+# define PRI_BDIGIT_DBL_PREFIX "l"
+# else
+# define BDIGIT unsigned short
+# define SIZEOF_BDIGIT (SIZEOF_LONG/2)
+# define SIZEOF_ACTUAL_BDIGIT SIZEOF_LONG
+# define BDIGIT_DBL unsigned long
+# define BDIGIT_DBL_SIGNED long
+# define PRI_BDIGIT_PREFIX "h"
+# define PRI_BDIGIT_DBL_PREFIX "l"
+# endif
+#endif
+#ifndef SIZEOF_ACTUAL_BDIGIT
+# define SIZEOF_ACTUAL_BDIGIT SIZEOF_BDIGIT
+#endif
+#ifdef PRI_BDIGIT_PREFIX
+# define PRIdBDIGIT PRI_BDIGIT_PREFIX"d"
+# define PRIiBDIGIT PRI_BDIGIT_PREFIX"i"
+# define PRIoBDIGIT PRI_BDIGIT_PREFIX"o"
+# define PRIuBDIGIT PRI_BDIGIT_PREFIX"u"
+# define PRIxBDIGIT PRI_BDIGIT_PREFIX"x"
+# define PRIXBDIGIT PRI_BDIGIT_PREFIX"X"
+#endif
+#ifdef PRI_BDIGIT_DBL_PREFIX
+# define PRIdBDIGIT_DBL PRI_BDIGIT_DBL_PREFIX"d"
+# define PRIiBDIGIT_DBL PRI_BDIGIT_DBL_PREFIX"i"
+# define PRIoBDIGIT_DBL PRI_BDIGIT_DBL_PREFIX"o"
+# define PRIuBDIGIT_DBL PRI_BDIGIT_DBL_PREFIX"u"
+# define PRIxBDIGIT_DBL PRI_BDIGIT_DBL_PREFIX"x"
+# define PRIXBDIGIT_DBL PRI_BDIGIT_DBL_PREFIX"X"
+#endif
+#define BIGNUM_EMBED_LEN_NUMBITS 3
+#ifndef BIGNUM_EMBED_LEN_MAX
+# if (SIZEOF_VALUE*3/SIZEOF_ACTUAL_BDIGIT) < (1 << BIGNUM_EMBED_LEN_NUMBITS)-1
+# define BIGNUM_EMBED_LEN_MAX (SIZEOF_VALUE*3/SIZEOF_ACTUAL_BDIGIT)
+# else
+# define BIGNUM_EMBED_LEN_MAX ((1 << BIGNUM_EMBED_LEN_NUMBITS)-1)
+# endif
+#endif
+
+#define SIZEOF_BDIGITS SIZEOF_BDIGIT
+
+struct RBignum {
+  struct RBasic basic;
+  union {
+    struct {
+      size_t len;
+      BDIGIT *digits;
+    } heap;
+    BDIGIT ary[BIGNUM_EMBED_LEN_MAX];
+  } as;
+};
+
+#define RBIGNUM(obj) (R_CAST(RBignum)(obj))
+#define BIGNUM_SIGN_BIT FL_USER1
+#define RBIGNUM_SET_SIGN(b,sign) \
+  ((sign) ? (RBASIC(b)->flags |= BIGNUM_SIGN_BIT) \
+   : (RBASIC(b)->flags &= ~BIGNUM_SIGN_BIT))
+#define RBIGNUM_EMBED_FLAG FL_USER2
+#define RBIGNUM_EMBED_LEN_MASK (FL_USER5|FL_USER4|FL_USER3)
+#define RBIGNUM_EMBED_LEN_SHIFT (FL_USHIFT+BIGNUM_EMBED_LEN_NUMBITS)
+#define RBIGNUM_LEN(b) \
+  ((RBASIC(b)->flags & RBIGNUM_EMBED_FLAG) ? \
+   (long)((RBASIC(b)->flags >> RBIGNUM_EMBED_LEN_SHIFT) & \
+     (RBIGNUM_EMBED_LEN_MASK >> RBIGNUM_EMBED_LEN_SHIFT)) : \
+   RBIGNUM(b)->as.heap.len)
+/* LSB:BIGNUM_DIGITS(b)[0], MSB:BIGNUM_DIGITS(b)[BIGNUM_LEN(b)-1] */
+#define RBIGNUM_DIGITS(b) \
+  ((RBASIC(b)->flags & RBIGNUM_EMBED_FLAG) ? \
+   RBIGNUM(b)->as.ary : \
+   RBIGNUM(b)->as.heap.digits)
+
+#endif

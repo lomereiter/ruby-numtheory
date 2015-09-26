@@ -10,9 +10,13 @@
 #include <ruby/version.h>
 #endif
 
+#if RUBY_VERSION_MAJOR == 1
 #if RUBY_VERSION_MINOR == 8
 #include <intern.h>
 #include <defines.h>
+#endif
+#else
+#include "bignum.h"
 #endif
 
 #ifdef DEBUG
