@@ -69,6 +69,8 @@ Init_numtheory()
             numtheory_fibonacci, -1);
     rb_define_module_function(rb_mNumTheory, "precompute_primes_upto",
             numtheory_precompute_primes_upto, 1);
+    rb_define_module_function(rb_mNumTheory, "primes_precomputed",
+            numtheory_primes_precomputed, 0);
     rb_define_module_function(rb_mNumTheory, "prime",
             numtheory_prime, 1);
     rb_define_module_function(rb_mNumTheory, "primepi",
@@ -121,10 +123,12 @@ Init_numtheory()
             numtheory_perfect_square_p, 0);
 
     NUM_OF_PRIMES = init_sieve(PRIMES_UPPER_LIMIT);
-    /* PRECOMPUTED_PRIMES: the number of precomputed primes. */
-    rb_define_const(rb_mNumTheory, "PRECOMPUTED_PRIMES", 
-            INT2NUM(NUM_OF_PRIMES));
-    
+}
+
+VALUE
+numtheory_primes_precomputed(VALUE obj)
+{
+    return INT2FIX(NUM_OF_PRIMES);
 }
 
 /*
@@ -152,8 +156,6 @@ numtheory_precompute_primes_upto(VALUE obj, VALUE n)
         free(numtheory_primes);
 
         NUM_OF_PRIMES = init_sieve(PRIMES_UPPER_LIMIT);
-        rb_const_set(mNumTheory, rb_intern("PRECOMPUTED_PRIMES"),
-                INT2NUM(NUM_OF_PRIMES));
     }
     else
     {

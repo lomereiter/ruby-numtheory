@@ -38,6 +38,7 @@ VALUE numtheory_powermod(int argc, VALUE *argv);
 VALUE numtheory_miller_rabin_pseudoprime_p(VALUE n);
 VALUE numtheory_nextprime(VALUE n);
 VALUE numtheory_precompute_primes_upto(VALUE obj, VALUE n);
+VALUE numtheory_primes_precomputed(VALUE obj);
 VALUE numtheory_prime(VALUE obj, VALUE i);
 VALUE numtheory_primepi(VALUE obj, VALUE n);
 VALUE numtheory_fibonacci(int argc, VALUE *argv);

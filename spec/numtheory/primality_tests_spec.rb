@@ -1,5 +1,11 @@
 require 'numtheory'
 
+RSpec.configure do |config|
+  config.expect_with :rspec do |c|
+    c.syntax = [:should]
+  end
+end
+
 describe "primality tests" do
   
   describe "prime? method" do
