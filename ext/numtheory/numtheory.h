@@ -16,7 +16,9 @@
 #include <defines.h>
 #endif
 #else
+#if RUBY_VERSION_MINOR >= 2
 #include "bignum.h"
+#endif
 #endif
 
 #ifdef DEBUG
