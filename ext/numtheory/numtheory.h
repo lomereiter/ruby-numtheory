@@ -15,8 +15,8 @@
 #include <intern.h>
 #include <defines.h>
 #endif
-#else
-#if RUBY_VERSION_MINOR >= 2
+#elif RUBY_API_VERSION_MAJOR == 2
+#if RUBY_API_VERSION_MINOR >= 2
 #include "bignum.h"
 #endif
 #endif
