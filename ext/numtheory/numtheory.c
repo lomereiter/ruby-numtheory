@@ -99,7 +99,7 @@ Init_numtheory()
             numtheory_nextprime, 0);
     rb_define_method(rb_cInteger, "prime_division",
             numtheory_prime_division, 0);
-    rb_define_method(rb_cFixnum, "factorial",
+    rb_define_method(rb_cInteger, "factorial",
             numtheory_factorial_primeswing, 0);
     rb_define_method(rb_cInteger, "primes_upto",
             numtheory_primes_upto, 1);

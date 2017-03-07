@@ -12,7 +12,7 @@
           "adcl $0, %2    \n\t" :   \
           "=m"(c0), "=m"(c1), "=m"(c2) :    \
           "m"(c0), "m"(c1), "m"(c2), "m"(i), "m"(j) :     \
-          "%eax","%edx", "%cc");
+          "%eax","%edx", "cc");
 
 #define BITSPERDIG (SIZEOF_BDIGITS * CHAR_BIT)
 #define BIGRAD ((BDIGIT_DBL)1 << BITSPERDIG)
